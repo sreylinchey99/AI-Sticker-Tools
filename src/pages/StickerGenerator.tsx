@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Wand2, ArrowRight, ArrowLeft } from 'lucide-react';
+import {generateImage} from '@/lib/api';
 
 interface GenerationState {
   uploadedImage: string | null;
@@ -123,17 +124,31 @@ export const StickerGenerator: React.FC = () => {
 
     try {
       // Simulate AI generation process
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // For demo purposes, create placeholder stickers
-      // In a real app, this would call an AI service
-      const mockStickers = Array.from({ length: state.selectedQuantity }, (_, index) => 
-        `https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=300&h=300&fit=crop&crop=face&auto=format&q=60&seed=${index}`
-      );
+      // // For demo purposes, create placeholder stickers
+      // // In a real app, this would call an AI service
+      // const mockStickers = Array.from({ length: state.selectedQuantity }, (_, index) => 
+      //   `https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=300&h=300&fit=crop&crop=face&auto=format&q=60&seed=${index}`
+      // );
       
+      // setState(prev => ({
+      //   ...prev,
+      //   stickerPack: mockStickers,
+      //   isGenerating: false
+      // }));
+      // Call the fal-ai API
+      const result = await generateImage({
+        prompt: `Make this image in ${state.selectedStyle} style`,
+        image_url: state.uploadedImage, // You may need to upload the image to a public URL first
+        num_images: state.selectedQuantity,
+      });
+
+      const stickers = result.images.map((img: any) => img.url);
+
       setState(prev => ({
         ...prev,
-        stickerPack: mockStickers,
+        stickerPack: stickers,
         isGenerating: false
       }));
 
@@ -148,6 +163,7 @@ export const StickerGenerator: React.FC = () => {
         description: "Something went wrong. Please try again!",
         variant: "destructive",
       });
+      console.log("errors:", error);
     }
   };
 
