@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Wand2, ArrowRight, ArrowLeft } from 'lucide-react';
-import {generateImage} from '@/lib/api';
+import { generateImage } from '@/lib/api';
 
 interface GenerationState {
   uploadedImage: string | null;
@@ -54,6 +54,19 @@ export const StickerGenerator: React.FC = () => {
     
     toast({
       title: "Photo uploaded! ✨",
+      description: "Your image looks perfect for sticker creation!",
+    });
+  };
+
+  const handleImageUrl = (url: string) => {
+    setState(prev => ({
+      ...prev,
+      uploadedImage: url,
+      currentStep: Math.max(prev.currentStep, 2)
+    }));
+    
+    toast({
+      title: "Image loaded! ✨",
       description: "Your image looks perfect for sticker creation!",
     });
   };
@@ -123,7 +136,7 @@ export const StickerGenerator: React.FC = () => {
     setState(prev => ({ ...prev, isGenerating: true }));
 
     try {
-      // Simulate AI generation process
+      // // Simulate AI generation process
       // await new Promise(resolve => setTimeout(resolve, 3000));
       
       // // For demo purposes, create placeholder stickers
@@ -137,7 +150,6 @@ export const StickerGenerator: React.FC = () => {
       //   stickerPack: mockStickers,
       //   isGenerating: false
       // }));
-      // Call the fal-ai API
       const result = await generateImage({
         prompt: `Make this image in ${state.selectedStyle} style`,
         image_url: state.uploadedImage, // You may need to upload the image to a public URL first
@@ -163,7 +175,6 @@ export const StickerGenerator: React.FC = () => {
         description: "Something went wrong. Please try again!",
         variant: "destructive",
       });
-      console.log("errors:", error);
     }
   };
 
@@ -272,6 +283,7 @@ export const StickerGenerator: React.FC = () => {
               </h2>
               <ImageUpload
                 onImageUpload={handleImageUpload}
+                onImageUrl={handleImageUrl}
                 uploadedImage={state.uploadedImage || undefined}
                 onRemoveImage={handleRemoveImage}
               />

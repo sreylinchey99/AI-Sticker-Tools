@@ -1,7 +1,7 @@
 import { fal } from "@fal-ai/client";
 
 fal.config({
-  credentials: "API_KEY"
+    credentials: import.meta.env.VITE_FAL_KEY
 });
 
 export async function generateImage({ prompt, image_url}) {
