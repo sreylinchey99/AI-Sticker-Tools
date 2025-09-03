@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { uploadToCloudinary } from './uploadToCloudinary';
 
 interface ImageUploadProps {
   onImageUpload: (file: File) => void;
@@ -23,12 +24,29 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const [imageUrl, setImageUrl] = useState('');
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      onImageUpload(acceptedFiles[0]);
+  // const onDrop = useCallback((acceptedFiles: File[]) => {
+  //   if (acceptedFiles.length > 0) {
+  //     onImageUpload(acceptedFiles[0]);
+  //   }
+  //   setIsDragActive(false);
+  // }, [onImageUpload]);
+
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+
+const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  if (acceptedFiles.length > 0) {
+    setIsUploadingFile(true);
+    try {
+      const publicUrl = await uploadToCloudinary(acceptedFiles[0]);
+      onImageUrl(publicUrl);
+    } catch (error) {
+      console.error('File upload failed:', error);
+    } finally {
+      setIsUploadingFile(false);
     }
-    setIsDragActive(false);
-  }, [onImageUpload]);
+  }
+  setIsDragActive(false);
+}, [onImageUrl]);
 
   const handleUrlSubmit = useCallback(async () => {
     if (!imageUrl.trim()) return;
@@ -128,6 +146,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 </p>
               </div>
               
+              {/* <Button variant="cute" size="lg" className="mt-4">
+                <Upload className="h-5 w-5 mr-2" />
+                Choose Photo
+              </Button> */}
               <Button variant="cute" size="lg" className="mt-4">
                 <Upload className="h-5 w-5 mr-2" />
                 Choose Photo

@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Wand2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { generateImage } from '@/lib/api';
+import { uploadToCloudinary } from '@/components/uploadToCloudinary';
+
 
 interface GenerationState {
   uploadedImage: string | null;
@@ -44,11 +46,12 @@ export const StickerGenerator: React.FC = () => {
 
   const progress = ((state.currentStep - 1) / (steps.length - 1)) * 100;
 
-  const handleImageUpload = (file: File) => {
-    const url = URL.createObjectURL(file);
+  const handleImageUpload = async(file: File) => {
+    // const url = URL.createObjectURL(file);
+    const fileUploaded = await uploadToCloudinary(file);
     setState(prev => ({
       ...prev,
-      uploadedImage: url,
+      uploadedImage: fileUploaded,
       currentStep: Math.max(prev.currentStep, 2)
     }));
     
@@ -57,6 +60,7 @@ export const StickerGenerator: React.FC = () => {
       description: "Your image looks perfect for sticker creation!",
     });
   };
+
 
   const handleImageUrl = (url: string) => {
     setState(prev => ({

@@ -18,6 +18,7 @@ const stylePricing = {
 };
 
 const quantityPricing = {
+  1: { multiplier: 1.0, label: '1 sticker' },
   4: { multiplier: 1.0, label: '4 stickers' },
   6: { multiplier: 1.3, label: '6 stickers' },
   8: { multiplier: 1.6, label: '8 stickers' },
