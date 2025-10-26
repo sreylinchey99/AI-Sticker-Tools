@@ -1,8 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Check, Calculator, Sparkles } from 'lucide-react';
+import { Check, Calculator, Sparkles, FileText } from 'lucide-react';
 
 interface PricingCalculatorProps {
   selectedStyle: string;
@@ -11,18 +10,56 @@ interface PricingCalculatorProps {
 }
 
 const stylePricing = {
-  'kawaii': { name: 'Kawaii Cute', basePrice: 0.10, multiplier: 1.0 },
-  'chibi': { name: 'Chibi', basePrice: 0.10, multiplier: 1.5 },
-  'emoji': { name: 'Emoji Expression', basePrice: 0.10, multiplier: 1.2 },
-  'magical': { name: 'Magical Girl', basePrice: 0.10, multiplier: 2.0 }
+  kawaii: { name: 'Kawaii Cute', basePrice: 0.10, multiplier: 1.0 },
+  chibi: { name: 'Chibi', basePrice: 0.10, multiplier: 1.5 },
+  emoji: { name: 'Emoji Expression', basePrice: 0.10, multiplier: 1.2 },
+  magical: { name: 'Magical Girl', basePrice: 0.10, multiplier: 2.0 },
+
+  // New styles added so any selected style shows pricing
+  professional: { name: 'Professional', basePrice: 0.30, multiplier: 2.5 },
+  cute: { name: 'Cute', basePrice: 0.12, multiplier: 1.2 },
+  cartoon: { name: 'Cartoon', basePrice: 0.08, multiplier: 1.0 },
+  minimalist: { name: 'Minimalist', basePrice: 0.06, multiplier: 0.9 },
+  custom: { name: 'Custom Style', basePrice: 0.15, multiplier: 2.0 }, // Added custom style pricing
 };
 
 const quantityPricing = {
+  1: { multiplier: 1.0, label: '1 sticker' },
   4: { multiplier: 1.0, label: '4 stickers' },
-  6: { multiplier: 1.3, label: '6 stickers' },
-  8: { multiplier: 1.6, label: '8 stickers' },
-  12: { multiplier: 2.0, label: '12 stickers' }
+  // 6: { multiplier: 1.3, label: '6 stickers' },
+  // 8: { multiplier: 1.6, label: '8 stickers' },
+  // 12: { multiplier: 2.0, label: '12 stickers' }
 };
+
+// Expressions pool
+const expressions = [
+  "laughing",
+  "angry",
+  "crying",
+  "sulking",
+  "thinking",
+  "sleepy",
+  "blowing a kiss",
+  "winking",
+  "surprised"
+];
+
+// Helper: build prompt
+function buildStickerPrompt(styleKey: string, quantity: number, referenceDescription: string) {
+  const style = stylePricing[styleKey as keyof typeof stylePricing];
+  const quantityInfo = quantityPricing[quantity as keyof typeof quantityPricing];
+  if (!style || !quantityInfo) return "";
+
+  // pick expressions according to quantity (fallback to cycling if not enough)
+  const chosenExpressions = Array.from(
+    { length: quantity },
+    (_, i) => expressions[i % expressions.length]
+  ).join(", ");
+
+  return `
+Create a sticker pack of ${quantityInfo.label} in the ${style.name} style.\nEach sticker should feature a unique expression: ${chosenExpressions}.\nMaintain a consistent outfit inspired by: ${referenceDescription}.\nStickers should be high quality, suitable for digital use, and visually cohesive as a set.
+  `.trim();
+}
 
 export const PricingCalculator: React.FC<PricingCalculatorProps> = ({ 
   selectedStyle,
@@ -58,6 +95,10 @@ export const PricingCalculator: React.FC<PricingCalculatorProps> = ({
       description: `${Math.round((quantityMultiplier - 1) * 100)}% quantity premium`
     }
   ];
+
+  // Example: hardcoded outfit description
+  const referenceDescription = "white floral dress with puff sleeves";
+  const generatedPrompt = buildStickerPrompt(selectedStyle, selectedQuantity, referenceDescription);
 
   return (
     <div className="space-y-6">
@@ -120,6 +161,15 @@ export const PricingCalculator: React.FC<PricingCalculatorProps> = ({
               <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
               <span className="text-sm">Commercial usage rights included</span>
             </div>
+          </div>
+
+          {/* Generated prompt */}
+          <div className="bg-muted p-3 rounded-lg text-sm space-y-2">
+            <div className="flex items-center space-x-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <span className="font-medium">Generated Prompt</span>
+            </div>
+            <p className="text-muted-foreground whitespace-pre-line">{generatedPrompt}</p>
           </div>
 
           <Button
