@@ -81,7 +81,7 @@ const onDrop = useCallback(async (acceptedFiles: File[]) => {
           <img
             src={uploadedImage}
             alt="Uploaded"
-            className="w-full h-64 object-cover rounded-lg shadow-soft"
+            className="w-full max-w-full object-contain rounded-lg shadow-soft"
           />
           <Button
             variant="destructive"

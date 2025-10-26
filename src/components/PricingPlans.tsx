@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Check, Calculator, Sparkles, FileText } from 'lucide-react';
 
 interface PricingCalculatorProps {
@@ -11,18 +10,25 @@ interface PricingCalculatorProps {
 }
 
 const stylePricing = {
-  'kawaii': { name: 'Kawaii Cute', basePrice: 0.10, multiplier: 1.0 },
-  'chibi': { name: 'Chibi', basePrice: 0.10, multiplier: 1.5 },
-  'emoji': { name: 'Emoji Expression', basePrice: 0.10, multiplier: 1.2 },
-  'magical': { name: 'Magical Girl', basePrice: 0.10, multiplier: 2.0 }
+  kawaii: { name: 'Kawaii Cute', basePrice: 0.10, multiplier: 1.0 },
+  chibi: { name: 'Chibi', basePrice: 0.10, multiplier: 1.5 },
+  emoji: { name: 'Emoji Expression', basePrice: 0.10, multiplier: 1.2 },
+  magical: { name: 'Magical Girl', basePrice: 0.10, multiplier: 2.0 },
+
+  // New styles added so any selected style shows pricing
+  professional: { name: 'Professional', basePrice: 0.30, multiplier: 2.5 },
+  cute: { name: 'Cute', basePrice: 0.12, multiplier: 1.2 },
+  cartoon: { name: 'Cartoon', basePrice: 0.08, multiplier: 1.0 },
+  minimalist: { name: 'Minimalist', basePrice: 0.06, multiplier: 0.9 },
+  custom: { name: 'Custom Style', basePrice: 0.15, multiplier: 2.0 }, // Added custom style pricing
 };
 
 const quantityPricing = {
   1: { multiplier: 1.0, label: '1 sticker' },
   4: { multiplier: 1.0, label: '4 stickers' },
-  6: { multiplier: 1.3, label: '6 stickers' },
-  8: { multiplier: 1.6, label: '8 stickers' },
-  12: { multiplier: 2.0, label: '12 stickers' }
+  // 6: { multiplier: 1.3, label: '6 stickers' },
+  // 8: { multiplier: 1.6, label: '8 stickers' },
+  // 12: { multiplier: 2.0, label: '12 stickers' }
 };
 
 // Expressions pool

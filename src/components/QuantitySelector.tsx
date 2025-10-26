@@ -17,27 +17,29 @@ interface QuantitySelectorProps {
 
 const quantityOptions: QuantityOption[] = [
   {
-    count: 4,
-    label: '4 Stickers',
-    description: 'Essential expressions pack',
+    count: 1,
+    label: '1 Sticker',
+    description: 'Single emotion sticker',
+    // recommended: true,
   },
-  {
-    count: 6,
-    label: '6 Stickers',
-    description: 'Popular choice for daily use',
-    recommended: true,
-  },
-  {
-    count: 8,
-    label: '8 Stickers',
-    description: 'Full range of emotions',
-    recommended: true,
-  },
-  {
-    count: 12,
-    label: '12 Stickers',
-    description: 'Complete expression collection',
-  },
+//  {
+//     count: 2,
+//     label: '2 Stickers',
+//     description: 'Two unique emotions',
+//     // recommended: true,
+//   },
+//   {
+//     count: 3,
+//     label: '3 Stickers',
+//     description: 'Three expressive stickers',
+    
+//   },
+//   {
+//     count: 4,
+//     label: '4 Stickers',
+//     description : 'Essential expressions pack',
+//     recommended: true,
+//   },
 ];
 
 export const QuantitySelector: React.FC<QuantitySelectorProps> = ({

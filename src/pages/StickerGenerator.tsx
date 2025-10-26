@@ -22,6 +22,7 @@ interface GenerationState {
   isGenerating: boolean;
   currentStep: number;
   pricingAccepted: boolean;
+  customPrompt: string;  // Add this to track custom prompt
 }
 
 export const StickerGenerator: React.FC = () => {
@@ -29,20 +30,56 @@ export const StickerGenerator: React.FC = () => {
   const [state, setState] = useState<GenerationState>({
     uploadedImage: null,
     selectedStyle: '',
-    selectedQuantity: 6,
+    selectedQuantity: 1,
     stickerPack: [],
     isGenerating: false,
-    currentStep: 1,
+    currentStep: 4,
     pricingAccepted: false,
+    customPrompt: ''
   });
 
   const steps = [
     { number: 1, title: 'Upload Photo', description: 'Add your beautiful selfie' },
     { number: 2, title: 'Choose Style', description: 'Pick your favorite look' },
-    { number: 3, title: 'Select Quantity', description: 'How many stickers?' },
+    // { number: 3, title: 'Select Quantity', description: 'How many stickers?' },
     { number: 4, title: 'Review & Pay', description: 'Confirm pricing & payment' },
     { number: 5, title: 'Generate & Download', description: 'Get your stickers!' },
   ];
+
+  // Map of style id => full prompt text. Professional and Cute prompts were
+  // provided by the user. Magical and Chibi reuse the Cute prompt. Two extra
+  // default prompts (cartoon, minimalist) are provided as sensible defaults.
+  const stylePrompts: Record<string, string> = {
+    professional: `A hyperrealistic vertical portrait shot in 1080x1920 format,
+characterized by stark cinematic lighting and intense contrast. Captured with a slightly low, upward-facing angle that dramatizes the subject's jawline and neck, the composition evokes quiet dominance and sculptural elegance. The background is a deep, saturated crimson red, creating a bold visual clash with the model's luminous skin and dark wardrobe. Lighting is tightly directional, casting warm golden highlights on one side of the face while plunging the other into velvety shadow,
+emphasizing bone structure with almost architectural precision.
+The subject's expression is unreadable and cool-toned-eyes half-lidded, lips relaxed- suggesting detachment or quiet defiance. The model wears a heavy wool or felt overcoat, its texture richly defined against the skin's smooth, dewy glow. Minimal retouching preserves skin texture and slight imperfections, adding realism. Editorial tension is created through close cropping, tonal control, and the almost oppressive intimacy of the camera's proximity.
+There are no props or accessories; the visual impact is created purely through light, shadow, color saturation, and posture - evoking high fashion, contemporary isolation, and`,
+
+    cute: `Create ultra-high-resolution 8K photo-realistic images of the original person (100% exact facial likeness, no alterations). A young woman crouching down beside a rustic old wall with peeling paint and potted flowers, holding a compact digital camera toward the viewer to take a mirror-like selfie.
+Outfit: She wears a soft ivory-white mini dress with a layered ruffled lace skirt, sheer fabric with delicate textures, spaghetti straps, and long-sleeve arm warmers. The dress has a sweet, romantic, doll-like aesthetic. She pairs the outfit with pastel white knee-high socks and cream-colored mary-jane shoes with a soft vintage vibe.
+Hairstyle: Long, wavy brown-black hair styled to one side with soft bangs framing her face, decorated with a small white ribbon hair clip for a cute, feminine touch.
+Makeup: youthful, doll-like style featuring soft pink blush across the cheeks, light eyeliner, fluttery lashes, and glossy pink lips. Her fair, porcelain-like skin enhances the innocent and dreamy atmosphere.
+Accessories: White bow hair clip, plus a pastel pink-and-white beaded camera strap with charms, adding playful detail.
+Pose: She crouches close to the ground, one hand resting against her cheek, gazing sweetly toward the camera she is holding up in her other hand. The pose conveys a mix of cuteness and intimacy, as if sharing a private candid moment.
+Props & Environment: Old textured cement wall with cracks and plants climbing on the metal gate behind her. Small white flower pots with green leaves and pink blossoms placed beside her, adding color contrast. A vintage digital camera acts as the main prop, capturing her reflection.
+Lighting: Soft natural daylight, slightly diffused, creating a pastel, natural skin tone with balanced highlights and shadows.
+Mood & Tone: dreamy, playful, girlish aesthetic with a mix of urban vintage and sweet romantic charm. The atmosphere feels casual yet artistic, like a candid street portrait.
+Camera angle: low-to-mid shot, close framing, giving focus to both the girl and the flowers at her side.
+Camera style: DSLR or compact digital camera portrait, high resolution, natural lighting, realistic textures.`,
+
+    // reuse Cute prompt for Magical and Chibi per request
+    magical: ``,
+    chibi: ``,
+
+    // sensible defaults
+    cartoon: `Vibrant stylized cartoon portrait with bold outlines, saturated colors, playful proportions, expressive eyes, and simplified textures; high detail in facial expression and clean composition suitable for sticker art.`,
+    minimalist: `Minimalist vector-style portrait: flat colors, simple geometric shapes, limited palette, subtle gradients, and clean negative space for a modern sticker look.`,
+  };
+
+  // assign reuse of cute prompt for magical/chibi
+  stylePrompts.magical = stylePrompts.cute;
+  stylePrompts.chibi = stylePrompts.cute;
 
   const progress = ((state.currentStep - 1) / (steps.length - 1)) * 100;
 
@@ -88,11 +125,16 @@ export const StickerGenerator: React.FC = () => {
     }));
   };
 
-  const handleStyleSelect = (styleId: string) => {
+  const handleStyleSelect = (styleId: string, customPrompt?: string) => {
+    // For custom style, only advance if there's actual content in the prompt
+    const shouldAdvance = styleId !== 'custom' || (customPrompt && customPrompt.trim().length > 0);
+    
     setState(prev => ({
-      ...prev,
+      ...prev,  
       selectedStyle: styleId,
-      currentStep: Math.max(prev.currentStep, 3),
+      customPrompt: customPrompt || '',
+      // Only advance to Review & Pay if it's not a custom style or if the custom prompt has content
+      ...(shouldAdvance && { currentStep: Math.max(prev.currentStep, 4) }),
       pricingAccepted: false
     }));
   };
@@ -101,7 +143,7 @@ export const StickerGenerator: React.FC = () => {
     setState(prev => ({
       ...prev,
       selectedQuantity: quantity,
-      currentStep: Math.max(prev.currentStep, 4),
+      currentStep: 4,
       pricingAccepted: false
     }));
   };
@@ -110,7 +152,7 @@ export const StickerGenerator: React.FC = () => {
     setState(prev => ({
       ...prev,
       pricingAccepted: true,
-      currentStep: Math.max(prev.currentStep, 5)
+      currentStep: 5
     }));
     
     toast({
@@ -119,7 +161,6 @@ export const StickerGenerator: React.FC = () => {
     });
 
     // TODO: Here you would integrate with Stripe for payment
-    // For now, we'll simulate payment success after a delay
     setTimeout(() => {
       toast({
         title: "Payment successful! ✅",
@@ -139,28 +180,32 @@ export const StickerGenerator: React.FC = () => {
 
     setState(prev => ({ ...prev, isGenerating: true }));
 
+    // Define a set of emotions
+    const emotions = ["happy", "sad", "excited", "angry", "surprised", "confused", "calm", "joyful"];
+    // Limit to max 4 images (API restriction)
+    const numImages = Math.min(state.selectedQuantity, 4);
+
     try {
-      // // Simulate AI generation process
-      // await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // // For demo purposes, create placeholder stickers
-      // // In a real app, this would call an AI service
-      // const mockStickers = Array.from({ length: state.selectedQuantity }, (_, index) => 
-      //   `https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=300&h=300&fit=crop&crop=face&auto=format&q=60&seed=${index}`
-      // );
-      
-      // setState(prev => ({
-      //   ...prev,
-      //   stickerPack: mockStickers,
-      //   isGenerating: false
-      // }));
+      // Base prompt comes from the selected style mapping. If not found,
+      // fall back to a short description.
+      const basePrompt = stylePrompts[state.selectedStyle] || `Make this image in ${state.selectedStyle} style`;
+
+      // Compose prompt for multiple emotions if more than 1 sticker
+      let prompt = basePrompt;
+      if (numImages > 1) {
+        const selectedEmotions = emotions.slice(0, numImages).join(", ");
+        prompt += ` with these emotions: ${selectedEmotions}`;
+      } else {
+        prompt += ` with a ${emotions[0]} emotion`;
+      }
+
       const result = await generateImage({
-        prompt: `Make this image in ${state.selectedStyle} style`,
-        image_url: state.uploadedImage, // You may need to upload the image to a public URL first
-        num_images: state.selectedQuantity,
+        prompt,
+        image_url: state.uploadedImage,
+        num_images: numImages,
       });
 
-      const stickers = result.images.map((img: any) => img.url);
+      const stickers = result.images?.map((img: any) => img.url) || [];
 
       setState(prev => ({
         ...prev,
@@ -170,7 +215,7 @@ export const StickerGenerator: React.FC = () => {
 
       toast({
         title: "Stickers generated! 🎉",
-        description: `Your ${state.selectedQuantity} ${state.selectedStyle} stickers are ready!`,
+        description: `Your ${stickers.length} ${state.selectedStyle} stickers are ready!`,
       });
     } catch (error) {
       setState(prev => ({ ...prev, isGenerating: false }));
@@ -281,31 +326,45 @@ export const StickerGenerator: React.FC = () => {
         <div className="space-y-8">
           {/* Step 1: Image Upload */}
           {state.currentStep >= 1 && (
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-primary bg-clip-text text-transparent">
-                Step 1: Upload Your Photo
-              </h2>
-              <ImageUpload
-                onImageUpload={handleImageUpload}
-                onImageUrl={handleImageUrl}
-                uploadedImage={state.uploadedImage || undefined}
-                onRemoveImage={handleRemoveImage}
-              />
+              <Card className="p-6">
+                <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-primary bg-clip-text text-transparent">
+                  Step 1: Upload Your Photo
+                </h2>
+                <ImageUpload
+                  onImageUpload={handleImageUpload}
+                  onImageUrl={handleImageUrl}
+                  uploadedImage={state.uploadedImage || undefined}
+                  onRemoveImage={handleRemoveImage}
+                />
             </Card>
           )}
 
           {/* Step 2: Style Selection */}
           {state.currentStep >= 2 && state.uploadedImage && (
-            <Card className="p-6">
-              <StyleSelector
-                selectedStyle={state.selectedStyle}
-                onStyleSelect={handleStyleSelect}
-              />
+            <Card className={`p-6 ${state.stickerPack.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="relative">
+                {state.stickerPack.length > 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <Badge variant="secondary" className="bg-accent/90 text-foreground font-bold">
+                      Step Completed
+                    </Badge>
+                  </div>
+                )}
+                <StyleSelector
+                  selectedStyle={state.selectedStyle}
+                  onStyleSelect={handleStyleSelect}
+                />
+              </div>
             </Card>
           )}
 
-          {/* Step 3: Quantity Selection */}
-          {state.currentStep >= 3 && state.selectedStyle && (
+          {/* Step 3: Quantity Selection
+              Temporarily commented out to simplify the flow. The app currently
+              advances: Upload -> Choose Style -> Review & Pay -> Generate.
+              If you want to re-enable quantity selection later, restore the
+              block below and ensure `handleQuantitySelect` updates state.
+          */}
+          {false && (
             <Card className="p-6">
               <QuantitySelector
                 selectedQuantity={state.selectedQuantity}
@@ -315,14 +374,27 @@ export const StickerGenerator: React.FC = () => {
           )}
 
           {/* Step 4: Pricing & Payment */}
-          {state.currentStep >= 4 && state.selectedStyle && state.selectedQuantity && (
-            <Card className="p-6">
-              <PricingCalculator
-                selectedStyle={state.selectedStyle}
-                selectedQuantity={state.selectedQuantity}
-                onAcceptPricing={handleAcceptPricing}
-              />
-            </Card>
+          {/* Note: quantity selection is currently disabled, so only require selectedStyle */}
+          {state.currentStep >= 4 && state.selectedStyle && (
+            // For custom style, only show pricing if we have a custom prompt
+            state.selectedStyle !== 'custom' || state.customPrompt.trim().length > 0 ? (
+              <Card className={`p-6 ${state.stickerPack.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="relative">
+                  {state.stickerPack.length > 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <Badge variant="secondary" className="bg-accent/90 text-foreground font-bold">
+                        Step Completed
+                      </Badge>
+                    </div>
+                  )}
+                  <PricingCalculator
+                    selectedStyle={state.selectedStyle}
+                    selectedQuantity={state.selectedQuantity}
+                    onAcceptPricing={handleAcceptPricing}
+                  />
+                </div>
+              </Card>
+            ) : null
           )}
 
           {/* Step 5: Generation & Preview */}
@@ -348,40 +420,34 @@ export const StickerGenerator: React.FC = () => {
                 </div>
               )}
               
-              <StickerPreview
-                isGenerating={state.isGenerating}
-                stickerPack={state.stickerPack}
-                onDownload={handleDownload}
-                onShare={handleShare}
-                selectedStyle={state.selectedStyle}
-                selectedQuantity={state.selectedQuantity}
-              />
+              <div className="space-y-8">
+                <StickerPreview
+                  isGenerating={state.isGenerating}
+                  stickerPack={state.stickerPack}
+                  onDownload={handleDownload}
+                  onShare={handleShare}
+                  selectedStyle={state.selectedStyle}
+                  selectedQuantity={state.selectedQuantity}
+                />
+                
+                {state.stickerPack.length > 0 && (
+                  <div className="text-center p-4 bg-accent/10 rounded-lg">
+                    <p className="text-lg font-medium text-foreground">
+                      ✨ Your stickers have been generated! ✨
+                    </p>
+                    <p className="text-muted-foreground mt-2">
+                      To create new stickers, please refresh the page and start a new session.
+                      <br />
+                      Or use the "Remove Photo" button above to start over.
+                    </p>
+                  </div>
+                )}
+              </div>
             </Card>
           )}
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={goToPrevStep}
-            disabled={state.currentStep <= 1}
-            className="px-6"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
-          
-          <Button
-            variant="default"
-            onClick={goToNextStep}
-            disabled={!canProceedToNextStep() || state.currentStep >= steps.length}
-            className="px-6"
-          >
-            Next
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
+  {/* Navigation Buttons Removed: Now each stage auto-advances on selection */}
       </div>
     </div>
   );
